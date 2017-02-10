@@ -1,0 +1,109 @@
+#!/usr/bin/env python
+
+import sys
+import subprocess
+import getopt
+
+try:
+	opts, args = getopt.getopt(sys.argv[1:], 'a')
+except getopt.GetoptError:
+	sys.stderr.write("Could not parse command line arguments!\n")
+	exit(1)
+
+long_output = False
+
+for opt in opts:
+	if "-a" in opt:
+		long_output = True
+
+try:
+	output = subprocess.check_output(["pbsnodes","-a"])
+except subprocess.CalledProcessError as e:
+	sys.stderr.write("Error calling ""pbsnodes -a"" ({0})\n".format(e.returncode))
+	exit(1)
+
+
+lines = output.splitlines()
+
+
+newnode = True
+allnodes = []
+for line in lines:
+	if not line.strip() == '':
+		# Assume first line is the node name
+		if newnode:
+			node = {}
+			node["name"] = line
+			newnode = False
+		else:
+			keyval = line.split("=")
+			node[keyval[0].strip()] = keyval[1].strip()
+	else:
+		# Got all the data on the node, shove it in the list
+		allnodes.append(node)
+		newnode = True
+
+CPUSPERNODE = 72
+
+totalcpus = 0
+downcpus = 0
+freecpus = 0
+busycpus = 0
+
+totalnodes = 0
+downnodes = 0
+freenodes = 0
+partialnodes = 0
+fullnodes = 0
+
+if long_output:
+	sys.stdout.write("Node usage detail:\n")
+	sys.stdout.write("  Name      Avail. CPUs  PBS Job IDs\n")
+
+for node in allnodes:
+	totalcpus += CPUSPERNODE
+	totalnodes += 1
+	state = node["state"]
+	if "down" in state:
+		downnodes += 1
+		downcpus += CPUSPERNODE
+		usedcpus = CPUSPERNODE
+	# Node is full up with jobs
+	if "job-busy" in state:
+		busycpus += CPUSPERNODE
+		fullnodes += 1
+		usedcpus = CPUSPERNODE
+	# "free" can mean partly occupied by other jobs, or completely empty
+	if "free" in state:
+		usedcpus = int(node["resources_assigned.ncpus"])
+		freecpus += CPUSPERNODE - usedcpus
+		busycpus += usedcpus
+		if usedcpus == 0:
+			freenodes += 1
+		else:
+			partialnodes += 1
+	if "job-exclusive" in state:
+		fullnodes += 1
+		busycpus += CPUSPERNODE
+		usedcpus = CPUSPERNODE
+
+	if long_output:
+		if "jobs" in node.keys():
+			joblist = [x.split(".")[0] for x in node["jobs"].split(", ")]
+			jobs = ", ".join(sorted(list(set(joblist))))
+		else:
+			jobs = ""
+		sys.stdout.write("  {0:8}     {1:3} /{2:3}  {3}\n".format(node["name"], CPUSPERNODE-usedcpus, CPUSPERNODE, jobs))
+	
+if long_output:
+	sys.stdout.write("\n")
+
+sys.stdout.write("Node usage summary:\n")
+sys.stdout.write("     Total     Free Partfree     Busy     Down\n")
+sys.stdout.write("  {0:8} {1:8} {2:8} {3:8} {4:8}\n".format(totalnodes,freenodes,partialnodes,fullnodes,downnodes))
+
+sys.stdout.write("CPU usage summary:\n")
+sys.stdout.write("     Total     Free     Busy     Down\n")
+sys.stdout.write("  {0:8} {1:8} {2:8} {3:8}\n".format(totalcpus,freecpus,busycpus,downcpus))
+
+exit(0)
