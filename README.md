@@ -15,7 +15,7 @@ A node which has some jobs running on it but is not in exclusive mode (i.e. othe
 
     [ibethune@cirrus-login0 node_usage]$ ./node_usage -a
     Node usage detail:
-      Name      Avail. CPUs  PBS Job IDs
+     Name      Avail. CPUs  PBS Job IDs
      r1i0n0        38 / 72  52539, 52576, 52584, 52591, 52608, 56810, 56811, 56812, 56813, 56814, 56815, 56816, 56817, 56818, 56819, 56820, 56821
      r1i0n1         0 / 72  57369
      r1i0n2        44 / 72  51133, 51134, 51136, 51141, 51142, 51144, 51149, 51150, 51152, 51157, 51158, 51160, 51165, 51166
