@@ -7,7 +7,7 @@ A node which has some jobs running on it but is not in exclusive mode (i.e. othe
 
 ## Usage:
 
-    code_usage [-a]
+    node_usage [-a]
     
     -a: Print long-format node usage information, includeing PBS Job IDs running on each node
       
