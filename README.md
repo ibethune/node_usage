@@ -1,7 +1,7 @@
 # node_usage
 A tool for use on EPCC's Cirrus cluster
 
-Prints summary and detailed info on the state of nodes in the cluster.
+Prints summary and detailed info on the state of nodes in the cluster (based on output from the ``pbsnodes`` command).
 
 A node which has some jobs running on it but is not in exclusive mode (i.e. other jobs may make use of the remaining CPUs) is considered to be ``Partfree``.  Nodes on which no CPUs are available (either because they are all being used, or the node is in exclusive mode) and considered to be ``Busy`` as are all of their cores, whether they are actually in use or not.
 
